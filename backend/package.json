@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "scripts": {
     "build": "nest build",
-    "start": "node dist/main",
+    "start": "nest build && node dist/main",
     "start:dev": "nest start --watch",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate": "prisma migrate deploy",
     "prisma:seed": "ts-node prisma/seed.ts",
     "prisma:studio": "prisma studio"
   },
