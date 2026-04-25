@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>RentFlow KE — Property Management</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f4f8;color:#1a202c;font-size:14px}
+:root{--blue:#2563eb;--bluedark:#1d4ed8;--green:#16a34a;--amber:#d97706;--red:#dc2626;--sw:240px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;font-family:inherit}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--bluedark)}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#15803d}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#b91c1c}
+.btn-outline{background:#fff;border:1px solid #e2e8f0;color:#374151}.btn-outline:hover{background:#f8fafc}
+.btn-ghost{background:transparent;color:#6b7280;padding:6px 10px;border:none}.btn-ghost:hover{background:#f3f4f6;color:#374151}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-full{width:100%;justify-content:center;padding:11px}
+input,select,textarea{width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1a202c;transition:border .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+label{display:block;font-size:12px;font-weight:500;color:#374151;margin-bottom:4px}
+.fg{margin-bottom:14px}
+.card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;padding:20px}
+.card-title{font-size:15px;font-weight:600;color:#111827;margin-bottom:14px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.kpi{background:#fff;border-radius:12px;border:1px solid #e2e8f0;padding:20px}
+.kpi-label{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px}
+.kpi-value{font-size:26px;font-weight:700;color:#111827;margin:4px 0}
+.kpi-sub{font-size:12px;color:#6b7280}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;padding:10px 12px;border-bottom:2px solid #e2e8f0;background:#f8fafc;white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#374151;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbfc}
+.tbl{overflow-x:auto;border-radius:12px;border:1px solid #e2e8f0;background:#fff}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.bg{background:#dcfce7;color:#16a34a}.br{background:#fee2e2;color:#dc2626}.by{background:#fef3c7;color:#d97706}.bb{background:#dbeafe;color:#2563eb}.bgr{background:#f1f5f9;color:#64748b}.bp{background:#f3e8ff;color:#7c3aed}
+.sidebar{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:#1e293b;display:flex;flex-direction:column;z-index:100;overflow-y:auto}
+.slogo{padding:20px 16px;border-bottom:1px solid #334155;display:flex;align-items:center;gap:10px}
+.slogo-icon{width:36px;height:36px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.slogo-name{font-size:16px;font-weight:700;color:#f1f5f9}
+.slogo-ver{font-size:10px;color:#64748b}
+.ssec{padding:10px 12px 4px;font-size:10px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.8px}
+.nav{display:flex;align-items:center;gap:10px;padding:9px 16px;margin:1px 8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:#94a3b8;transition:all .15s}
+.nav:hover{background:#334155;color:#f1f5f9}
+.nav.on{background:var(--blue);color:#fff}
+.nav-ic{font-size:16px;width:20px;text-align:center}
+.sfoot{padding:14px;border-top:1px solid #334155;margin-top:auto}
+.suser{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.topbar{position:fixed;top:0;left:var(--sw);right:0;height:56px;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:90}
+.topbar-title{font-size:16px;font-weight:600;color:#111827}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.main{margin-left:var(--sw);padding-top:56px;min-height:100vh}
+.page{padding:24px;max-width:1400px}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.ph-title{font-size:20px;font-weight:700;color:#111827}
+.ph-sub{font-size:13px;color:#6b7280;margin-top:2px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.mhead{padding:18px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}
+.mtitle{font-size:15px;font-weight:600}
+.mclose{background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;line-height:1;padding:0 4px}
+.mbody{padding:24px}
+.mfoot{padding:14px 24px;border-top:1px solid #e2e8f0;display:flex;gap:8px;justify-content:flex-end}
+.tabs{display:flex;border-bottom:2px solid #e2e8f0;margin-bottom:20px;gap:0}
+.tab{padding:10px 16px;cursor:pointer;font-size:13px;font-weight:500;color:#6b7280;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap}
+.tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.tab:hover:not(.on){color:#374151}
+.empty{text-align:center;padding:48px 24px;color:#6b7280}
+.empty-ic{font-size:40px;margin-bottom:12px}
+.empty-title{font-size:15px;font-weight:600;color:#374151;margin-bottom:6px}
+.spin{display:inline-block;width:18px;height:18px;border:2px solid #e2e8f0;border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loading{display:flex;align-items:center;justify-content:center;padding:48px;gap:10px;color:#6b7280}
+.alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:14px}
+.alert-info{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+.alert-warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+.alert-err{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.alert-ok{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.divider{height:1px;background:#e2e8f0;margin:14px 0}
+.pbar{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;margin-top:6px}
+.pfill{height:100%;border-radius:3px}
+.mono{font-family:monospace}
+.fw6{font-weight:600}.fw7{font-weight:700}.muted{color:#6b7280}.sm{font-size:12px}
+.login-wrap{min-height:100vh;background:linear-gradient(135deg,#1e293b,#0f172a 50%,#1a3a5c);display:flex;align-items:center;justify-content:center}
+.login-card{background:#fff;border-radius:20px;padding:40px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-ic{width:56px;height:56px;background:var(--blue);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 12px}
+.login-name{font-size:22px;font-weight:700;color:#111827}
+.login-sub{font-size:13px;color:#6b7280;margin-top:4px}
+.demo-box{margin-top:16px;padding:12px;background:#f8fafc;border-radius:8px;font-size:12px;color:#64748b;line-height:1.8}
+.toast{position:fixed;top:68px;right:20px;z-index:9999;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px;min-width:260px;cursor:pointer}
+.t-ok{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.t-err{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.t-info{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-size:16px;padding-right:30px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────
+const API = 'http://localhost:3001/api/v1';
+
+// ── STATE ─────────────────────────────────────────────────────────────
+let state = { user: null, page: 'dashboard', toast: null, toastTimer: null };
+
+// ── UTILS ─────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fmt = n => typeof n === 'number' ? 'KES ' + n.toLocaleString('en-KE', {maximumFractionDigits:0}) : (n || '—');
+const fdate = d => d ? new Date(d).toLocaleDateString('en-KE', {day:'2-digit',month:'short',year:'numeric'}) : '—';
+const fmon = d => d ? new Date(d).toLocaleDateString('en-KE', {month:'short',year:'numeric'}) : '—';
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function badge(s) {
+  const m = {ACTIVE:'bg',PAID:'bg',VACANT:'bg',MATCHED:'bg',OCCUPIED:'bb',PARTIAL:'by',UNPAID:'by',OVERDUE:'br',TERMINATED:'bgr',EXPIRED:'bgr',UNMATCHED:'br',PENDING:'by',SENT:'bg',FAILED:'br',CASH:'bgr',MPESA:'bb',BANK_TRANSFER:'bp'};
+  return `<span class="badge ${m[s]||'bgr'}">${esc(s)}</span>`;
+}
+
+// ── API ───────────────────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const token = localStorage.getItem('rf_token');
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+    ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.message || 'Request failed (' + res.status + ')');
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────
+function toast(msg, type = 'ok') {
+  if (state.toastTimer) clearTimeout(state.toastTimer);
+  const icons = { ok: '✓', err: '✕', info: 'ℹ' };
+  const cls = { ok: 't-ok', err: 't-err', info: 't-info' };
+  const el = document.createElement('div');
+  el.className = 'toast ' + cls[type];
+  el.innerHTML = `<span>${icons[type]}</span><span>${esc(msg)}</span>`;
+  el.onclick = () => el.remove();
+  document.body.appendChild(el);
+  state.toastTimer = setTimeout(() => el.remove(), 4000);
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────
+function openModal(title, bodyHtml, footerHtml) {
+  const existing = document.getElementById('modal-root');
+  if (existing) existing.remove();
+  const div = document.createElement('div');
+  div.id = 'modal-root';
+  div.className = 'overlay';
+  div.innerHTML = `
+    <div class="modal">
+      <div class="mhead"><span class="mtitle">${esc(title)}</span><button class="mclose" onclick="closeModal()">&#215;</button></div>
+      <div class="mbody">${bodyHtml}</div>
+      ${footerHtml ? `<div class="mfoot">${footerHtml}</div>` : ''}
+    </div>`;
+  div.addEventListener('click', e => { if (e.target === div) closeModal(); });
+  document.body.appendChild(div);
+}
+function closeModal() {
+  const m = document.getElementById('modal-root');
+  if (m) m.remove();
+}
+function modalVal(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────
+function render() {
+  const app = document.getElementById('app');
+  if (!state.user) { app.innerHTML = renderLogin(); return; }
+  app.innerHTML = `
+    ${renderSidebar()}
+    <div class="topbar">
+      <div class="topbar-title">${getPageTitle()}</div>
+      <div class="topbar-right">
+        <span class="muted sm">${esc(state.user.landlord?.businessName || state.user.email)}</span>
+        <div class="avatar">${(state.user.firstName || 'U')[0]}</div>
+      </div>
+    </div>
+    <div class="main"><div class="page" id="page-content"></div></div>`;
+  loadPage();
+}
+
+function getPageTitle() {
+  const t = {dashboard:'Dashboard',properties:'Properties',units:'Units',tenants:'Tenants',leases:'Leases',payments:'Payments',billing:'Billing & Charges',receipts:'Receipts',reports:'Reports',notifications:'Notifications',settings:'Settings'};
+  return t[state.page] || state.page;
+}
+
+function renderLogin() {
+  return `
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-ic">🏠</div>
+        <div class="login-name">RentFlow KE</div>
+        <div class="login-sub">Property Management System</div>
+      </div>
+      <div id="login-err"></div>
+      <div class="fg"><label>Email</label><input id="l-email" type="email" value="james.kamau@gmail.com" placeholder="Email"/></div>
+      <div class="fg"><label>Password</label><input id="l-pass" type="password" value="Landlord@2024!" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()" id="login-btn">Sign In →</button>
+      <div class="demo-box">
+        <strong>Demo accounts:</strong><br/>
+        Landlord: james.kamau@gmail.com / Landlord@2024!<br/>
+        Tenant: grace.wanjiku@gmail.com / Tenant@2024!
+      </div>
+    </div>
+  </div>`;
+}
+
+async function doLogin() {
+  const btn = $('login-btn');
+  const err = $('login-err');
+  const email = $('l-email').value;
+  const password = $('l-pass').value;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Signing in…';
+  err.innerHTML = '';
+  try {
+    const data = await api('/auth/login', { method: 'POST', body: { email, password } });
+    localStorage.setItem('rf_token', data.accessToken);
+    state.user = data.user;
+    render();
+  } catch(e) {
+    err.innerHTML = `<div class="alert alert-err">⚠ ${esc(e.message)}</div>`;
+    btn.disabled = false;
+    btn.innerHTML = 'Sign In →';
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('rf_token');
+  state.user = null;
+  render();
+}
+
+function navTo(page) {
+  state.page = page;
+  document.querySelectorAll('.nav').forEach(n => n.classList.toggle('on', n.dataset.page === page));
+  document.querySelector('.topbar-title').textContent = getPageTitle();
+  loadPage();
+}
+
+function renderSidebar() {
+  const nav = (ic, label, id, section) => ({ ic, label, id, section });
+  const items = [
+    nav('📊','Dashboard','dashboard','MAIN'),
+    nav('🏢','Properties','properties','MANAGE'),
+    nav('🚪','Units','units','MANAGE'),
+    nav('👥','Tenants','tenants','MANAGE'),
+    nav('📋','Leases','leases','MANAGE'),
+    nav('💳','Payments','payments','FINANCE'),
+    nav('🧾','Billing','billing','FINANCE'),
+    nav('📄','Receipts','receipts','FINANCE'),
+    nav('📈','Reports','reports','FINANCE'),
+    nav('🔔','Notifications','notifications','SYSTEM'),
+    nav('⚙️','Settings','settings','SYSTEM'),
+  ];
+  let lastSec = '';
+  let html = `<div class="sidebar">
+    <div class="slogo">
+      <div class="slogo-icon">🏠</div>
+      <div><div class="slogo-name">RentFlow KE</div><div class="slogo-ver">v1.0</div></div>
+    </div>
+    <div style="flex:1;padding:8px 0">`;
+  for (const it of items) {
+    if (it.section !== lastSec) {
+      html += `<div class="ssec">${it.section}</div>`;
+      lastSec = it.section;
+    }
+    html += `<div class="nav${state.page===it.id?' on':''}" data-page="${it.id}" onclick="navTo('${it.id}')">
+      <span class="nav-ic">${it.ic}</span><span>${it.label}</span>
+    </div>`;
+  }
+  const u = state.user;
+  html += `</div>
+    <div class="sfoot">
+      <div class="suser">
+        <div class="avatar" style="width:32px;height:32px;font-size:12px">${(u.firstName||'U')[0]}</div>
+        <div><div style="font-size:12px;font-weight:600;color:#f1f5f9">${esc(u.firstName)} ${esc(u.lastName)}</div><div class="sm" style="color:#64748b">${esc(u.role)}</div></div>
+      </div>
+      <button class="btn btn-ghost" style="color:#94a3b8;font-size:12px;width:100%;justify-content:center" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>`;
+  return html;
+}
+
+// ── PAGE LOADER ───────────────────────────────────────────────────────
+function loadPage() {
+  const pc = $('page-content');
+  if (!pc) return;
+  pc.innerHTML = '<div class="loading"><div class="spin"></div> Loading…</div>';
+  const loaders = {
+    dashboard: loadDashboard, properties: loadProperties, units: loadUnits,
+    tenants: loadTenants, leases: loadLeases, payments: loadPayments,
+    billing: loadBilling, receipts: loadReceipts, reports: loadReports,
+    notifications: loadNotifications, settings: loadSettings
+  };
+  (loaders[state.page] || loadDashboard)();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const d = await api('/landlords/dashboard');
+    const pc = $('page-content');
+    const col = d.rent?.collectionRate || 0;
+    const colColor = col >= 80 ? 'var(--green)' : col >= 50 ? 'var(--amber)' : 'var(--red)';
+    pc.innerHTML = `
+      <div class="ph"><div><div class="ph-title">Dashboard</div><div class="ph-sub">${new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div></div></div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">Properties</div><div class="kpi-value">${d.properties||0}</div><div class="kpi-sub">${d.units?.occupied||0} units occupied of ${d.units?.total||0}</div></div>
+        <div class="kpi"><div class="kpi-label">Expected Rent</div><div class="kpi-value" style="font-size:20px">${fmt(d.rent?.expected||0)}</div><div class="kpi-sub">This month</div></div>
+        <div class="kpi"><div class="kpi-label">Collected</div><div class="kpi-value" style="font-size:20px;color:var(--green)">${fmt(d.rent?.collected||0)}</div><div class="kpi-sub" style="color:var(--green)">${col}% collection rate</div></div>
+        <div class="kpi"><div class="kpi-label">Outstanding</div><div class="kpi-value" style="font-size:20px;color:var(--red)">${fmt(d.rent?.outstanding||0)}</div><div class="kpi-sub" style="color:var(--red)">${(d.unpaidTenants||[]).length} tenants unpaid</div></div>
+      </div>
+      <div class="pbar" style="margin-bottom:20px"><div class="pfill" style="width:${col}%;background:${colColor}"></div></div>
+      <div class="g2" style="gap:20px">
+        <div class="card">
+          <div class="card-title">Recent Payments</div>
+          ${(d.recentPayments||[]).length === 0 ? '<div class="empty"><div class="empty-ic">💳</div><div class="empty-title">No payments yet</div></div>' :
+          `<div class="tbl"><table>
+            <thead><tr><th>Tenant</th><th>Amount</th><th>Reference</th><th>Date</th></tr></thead>
+            <tbody>${(d.recentPayments||[]).slice(0,8).map(p=>`<tr>
+              <td class="fw6">${esc(p.tenant?.firstName)} ${esc(p.tenant?.lastName)}</td>
+              <td style="color:var(--green);font-weight:600">${fmt(Number(p.amount))}</td>
+              <td><span class="mono sm">${esc(p.mpesaReference||'Manual')}</span></td>
+              <td class="muted">${fdate(p.paidAt)}</td>
+            </tr>`).join('')}</tbody>
+          </table></div>`}
+        </div>
+        <div class="card">
+          <div class="card-title">Unpaid Tenants</div>
+          ${(d.unpaidTenants||[]).length === 0 ? '<div class="empty"><div class="empty-ic">✅</div><div class="empty-title">All paid!</div></div>' :
+          `<div class="tbl"><table>
+            <thead><tr><th>Tenant</th><th>Unit</th><th>Balance</th><th>Status</th></tr></thead>
+            <tbody>${(d.unpaidTenants||[]).slice(0,8).map(c=>`<tr>
+              <td class="fw6">${esc(c.tenant?.firstName)} ${esc(c.tenant?.lastName)}</td>
+              <td>${esc(c.lease?.unit?.unitNumber)}</td>
+              <td style="color:var(--red);font-weight:600">${fmt(Number(c.balance))}</td>
+              <td>${badge(c.status)}</td>
+            </tr>`).join('')}</tbody>
+          </table></div>`}
+        </div>
+      </div>`;
+  } catch(e) { $('page-content').innerHTML = `<div class="alert alert-err">Failed to load dashboard: ${esc(e.message)}</div>`; }
+}
+
+// ── PROPERTIES ────────────────────────────────────────────────────────
+async function loadProperties() {
+  try {
+    const items = await api('/properties');
+    const pc = $('page-content');
+    const typeColor = {APARTMENT_BLOCK:'bb',BUNGALOW:'bg',MAISONETTE:'bp',COMMERCIAL:'by',BEDSITTER:'bgr'};
+    pc.innerHTML = `
+      <div class="ph">
+        <div><div class="ph-title">Properties</div><div class="ph-sub">${items.length} properties</div></div>
+        <button class="btn btn-primary" onclick="openPropertyModal()">＋ Add Property</button>
+      </div>
+      ${items.length === 0 ? `<div class="empty"><div class="empty-ic">🏢</div><div class="empty-title">No properties yet</div><p>Add your first property to get started</p><br/><button class="btn btn-primary" onclick="openPropertyModal()">Add Property</button></div>` :
+      `<div class="g3">${items.map(p=>`
+        <div class="kpi" style="cursor:pointer" onclick="openPropertyModal(${JSON.stringify(esc(JSON.stringify(p))).slice(1,-1)})">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <span style="font-size:20px">🏢</span>
+            <span class="badge ${typeColor[p.propertyType]||'bgr'}" style="font-size:10px">${esc((p.propertyType||'').replace(/_/g,' '))}</span>
+          </div>
+          <div class="fw7" style="font-size:15px;margin-bottom:4px">${esc(p.name)}</div>
+          <div class="muted sm">${esc(p.address)}</div>
+          <div class="muted sm">${esc(p.county)}</div>
+          <div class="divider"></div>
+          <div style="display:flex;gap:16px">
+            <div><div class="kpi-label" style="font-size:10px">Units</div><div class="fw7">${p._count?.units||0}</div></div>
+            <div><div class="kpi-label" style="font-size:10px">Code</div><div class="mono fw6 sm">${esc(p.code)}</div></div>
+          </div>
+        </div>`).join('')}</div>`}`;
+  } catch(e) { $('page-content').innerHTML = `<div class="alert alert-err">${esc(e.message)}</div>`; }
+}
+
+window._propEdit = null;
+function openPropertyModal(jsonStr) {
+  const p = jsonStr ? JSON.parse(jsonStr) : null;
+  window._propEdit = p;
+  const counties = ['Nairobi','Mombasa','Kisumu','Nakuru','Eldoret','Kiambu','Kajiado','Machakos','Nyeri','Thika','Uasin Gishu','Meru'];
+  const types = ['APARTMENT_BLOCK','BUNGALOW','MAISONETTE','COMMERCIAL','BEDSITTER','MIXED_USE'];
+  openModal(p ? 'Edit Property' : 'Add Property',
+    `<div class="g2">
+      <div class="fg"><label>Property Name*</label><input id="p-name" value="${esc(p?.name||'')}"/></div>
+      <div class="fg"><label>Code* (short, unique)</label><input id="p-code" value="${esc(p?.code||'')}" placeholder="KILE" style="text-transform:uppercase"/></div>
+    </div>
+    <div class="fg"><label>Address*</label><input id="p-addr" value="${esc(p?.address||'')}"/></div>
+    <div class="g2">
+      <div class="fg"><label>County*</label><select id="p-county">${counties.map(c=>`<option${(p?.county===c)?' selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="fg"><label>Type</label><select id="p-type">${types.map(t=>`<option value="${t}"${(p?.propertyType===t)?' selected':''}>${t.replace(/_/g,' ')}</option>`).join('')}</select></div>
+    </div>
+    <div class="fg"><label>Description</label><textarea id="p-desc" rows="2">${esc(p?.description||'')}</textarea></div>`,
+    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveProperty()">Save Property</button>`);
+}
+
+async function saveProperty() {
+  const body = { name: modalVal('p-name'), code: modalVal('p-code').toUpperCase(), address: modalVal('p-addr'), county: modalVal('p-county'), propertyType: modalVal('p-type'), description: modalVal('p-desc') };
+  try {
+    if (window._propEdit) await api('/properties/' + window._propEdit.id, { method: 'PATCH', body });
+    else await api('/properties', { method: 'POST', body });
+    closeModal(); toast('Property saved!'); loadProperties();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── UNITS ─────────────────────────────────────────────────────────────
+async function loadUnits() {
+  try {
+    const [items, props] = await Promise.all([api('/units'), api('/properties')]);
+    window._unitProps = props;
+    const pc = $('page-content');
+    pc.innerHTML = `
+      <div class="ph">
+        <div><div class="ph-title">Units</div><div class="ph-sub">${items.length} units</div></div>
+        <button class="btn btn-primary" onclick="openUnitModal()">＋ Add Unit</button>
+      </div>
+      <div class="tbl"><table>
+        <thead><tr><th>Unit</th><th>Property</th><th>Floor</th><th>Rent/Month</th><th>Status</th><th>Tenant</th><th></th></tr></thead>
+        <tbody>${items.length === 0 ? `<tr><td colspan="7"><div class="empty"><div class="empty-ic">🚪</div><div class="empty-title">No units yet</div></div></td></tr>` :
+        items.map(u=>`<tr>
+          <td><span class="mono fw6">${esc(u.unitNumber)}</span></td>
+          <td>${esc(u.property?.name)}</td>
+          <td class="muted">${esc(u.floor||'—')}</td>
+          <td class="fw6">${fmt(Number(u.rentAmount))}</td>
+          <td>${badge(u.status)}</td>
+          <td>${u.leases?.[0]?.tenant ? `${esc(u.leases[0].tenant.firstName)} ${esc(u.leases[0].tenant.lastName)}` : '<span class="muted">Vacant</span>'}</td>
+          <td><button class="btn btn-ghost btn-sm" onclick='openUnitModal(${JSON.stringify(JSON.stringify(u))})'>Edit</button></td>
+        </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+  } catch(e) { $('page-content').innerHTML = `<div class="alert alert-err">${esc(e.message)}</div>`; }
+}
+
+window._unitEdit = null;
+function openUnitModal(jsonStr) {
+  const u = jsonStr ? JSON.parse(jsonStr) : null;
+  window._unitEdit = u;
+  const props = window._unitProps || [];
+  openModal(u ? 'Edit Unit' : 'Add Unit',
+    `<div class="fg"><label>Property*</label><select id="u-prop">${props.map(p=>`<option value="${p.id}"${u?.propertyId===p.id?' selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
+    <div class="g2">
+      <div class="fg"><label>Unit Number*</label><input id="u-num" value="${esc(u?.unitNumber||'')}" placeholder="A1, B2, 101"/></div>
+      <div class="fg"><label>Floor</label><input id="u-floor" value="${esc(u?.floor||'')}" placeholder="1st, Ground"/></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>Monthly Rent (KES)*</label><input id="u-rent" type="number" value="${u?.rentAmount||''}"/></div>
+      <div class="fg"><label>Status</label><select id="u-status">
+        ${['VACANT','OCCUPIED','UNDER_MAINTENANCE','RESERVED'].map(s=>`<option${u?.status===s?' selected':''}>${s}</option>`).join('')}
+      </select></div>
+    </div>`,
+    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveUnit()">Save Unit</button>`);
+}
+
+async function saveUnit() {
+  const body = { propertyId: modalVal('u-prop'), unitNumber: modalVal('u-num').toUpperCase(), floor: modalVal('u-floor'), rentAmount: parseFloat(modalVal('u-rent')), status: modalVal('u-status') };
+  try {
+    if (window._unitEdit) await api('/units/' + window._unitEdit.id, { method: 'PATCH', body });
+    else await api('/units', { method: 'POST', body });
+    closeModal(); toast('Unit saved!'); loadUnits();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── TENANTS ───────────────────────────────────────────────────────────
+window._tenantView = null;
+async function loadTenants() {
+  if (window._tenantView) { loadTenantLedger(window._tenantView); return; }
+  try {
+    const items = await api('/tenants');
+    const pc = $('page-content');
+    pc.innerHTML = `
+      <div class="ph">
+        <div><div class="ph-title">Tenants</div><div class="ph-sub">${items.length} tenants</div></div>
+        <button class="btn btn-primary" onclick="openTenantModal()">＋ Add Tenant</button>
+      </div>
+      <div class="tbl"><table>
+        <thead><tr><th>Name</th><th>Phone</th><th>Current Unit</th><th>Account Ref</th><th></th></tr></thead>
+        <tbody>${items.length === 0 ? `<tr><td colspan="5"><div class="empty"><div class="empty-ic">👥</div><div class="empty-title">No tenants yet</div></div></td></tr>` :
+        items.map(t => {
+          const al = t.leases?.[0];
+          return `<tr>
+            <td><div class="fw6">${esc(t.firstName)} ${esc(t.lastName)}</div><div class="sm muted">${esc(t.email||'')}</div></td>
+            <td>${esc(t.phone)}</td>
+            <td>${al ? `${esc(al.unit?.property?.name)} — ${esc(al.unit?.unitNumber)}` : '<span class="muted">No active lease</span>'}</td>
+            <td>${al ? `<span class="badge bb mono" style="font-size:11px">${esc(al.accountReference)}</span>` : '<span class="muted">—</span>'}</td>
+            <td style="display:flex;gap:4px">
+              <button class="btn btn-ghost btn-sm" onclick="viewTenantLedger('${t.id}')">Ledger</button>
+              <button class="btn btn-ghost btn-sm" onclick='openTenantModal(${JSON.stringify(JSON.stringify(t))})'>Edit</button>
+            </td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table></div>`;
+  } catch(e) { $('page-content').innerHTML = `<div class="alert alert-err">${esc(e.message)}</div>`; }
+}
+
+async function viewTenantLedger(id) {
+  window._tenantView = id;
+  loadTenantLedger(id);
+}
+
+async function loadTenantLedger(id) {
+  const pc = $('page-content');
+  pc.innerHTML = '<div class="loading"><div class="spin"></div> Loading ledger…</div>';
+  try {
+    const data = await api('/tenants/' + id + '/ledger');
+    const t = data.tenant;
+    const al = t.leases?.[0];
+    pc.innerHTML = `
+      <div class="ph">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="btn btn-outline btn-sm" onclick="backFromLedger()">← Back</button>
+          <div><div class="ph-title">${esc(t.firstName)} ${esc(t.lastName)}</div><div class="ph-sub">${esc(t.phone)} · ${esc(t.email||'No email')}</div></div>
+        </div>
+      </div>
+      <div class="g3" style="margin-bottom:20px">
+        <div class="kpi"><div class="kpi-label">National ID</div><div class="fw6" style="margin-top:4px">${esc(t.nationalId||'Not set')}</div></div>
+        <div class="kpi"><div class="kpi-label">Current Unit</div><div class="fw6" style="margin-top:4px">${al ? `${esc(al.unit?.property?.name)} — ${esc(al.unit?.unitNumber)}` : 'No active lease'}</div></div>
+        <div class="kpi"><div class="kpi-label">Current Balance</div><div class="fw7" style="margin-top:4px;color:${(data.currentBalance||0)>0?'var(--red)':'var(--green)'}">${fmt(data.currentBalance||0)}</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Ledger</div>
+        <div class="tbl"><table>
+          <thead><tr><th>Date</th><th>Description</th><th>Charge</th><th>Payment</th><th>Running Balance</th></tr></thead>
+          <tbody>${(data.ledger||[]).map(e=>`<tr>
+            <td class="muted sm">${fdate(e.date)}</td>
+            <td>${esc(e.description)}</td>
+            <td style="color:var(--red)">${e.amount>0?fmt(e.amount):'—'}</td>
+            <td style="color:var(--green)">${e.amount<0?fmt(Math.abs(e.amount)):'—'}</td>
+            <td style="font-weight:600;color:${e.balance>0?'var(--red)':'var(--green)'}">${fmt(e.balance)}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+      </div>`;
+  } catch(e) { pc.innerHTML = `<div class="alert alert-err">${esc(e.message)}</div>`; }
+}
+
+function backFromLedger() { window._tenantView = null; loadTenants(); }
+
+window._tenantEdit = null;
+function openTenantModal(jsonStr) {
+  const t = jsonStr ? JSON.parse(jsonStr) : null;
+  window._tenantEdit = t;
+  openModal(t ? 'Edit Tenant' : 'Add Tenant',
+    `<div class="g2">
+      <div class="fg"><label>First Name*</label><input id="t-fn" value="${esc(t?.firstName||'')}"/></div>
+      <div class="fg"><label>Last Name*</label><input id="t-ln" value="${esc(t?.lastName||'')}"/></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>Phone*</label><input id="t-ph" value="${esc(t?.phone||'')}" placeholder="+254700000000"/></div>
+      <div class="fg"><label>Email</label><input id="t-em" type="email" value="${esc(t?.email||'')}"/></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>National ID</label><input id="t-nid" value="${esc(t?.nationalId||'')}"/></div>
+      <div class="fg"><label>Portal Password ${t?'(leave blank to keep)':''}</label><input id="t-pw" type="password" placeholder="${t?'Leave blank to keep':'Set password'}"/></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>Emergency Contact Name</label><input id="t-ecn" value="${esc(t?.emergencyContactName||'')}"/></div>
+      <div class="fg"><label>Emergency Contact Phone</label><input id="t-ecp" value="${esc(t?.emergencyContactPhone||'')}"/></div>
+    </div>
+    <div class="fg"><label>Notes</label><textarea id="t-notes" rows="2">${esc(t?.notes||'')}</textarea></div>`,
+    `<button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveTenant()">Save Tenant</button>`);
+}
+
+async function saveTenant() {
+  const pw = modalVal('t-pw');
+  const body = { firstName: modalVal('t-fn'), lastName: modalVal('t-ln'), phone: modalVal('t-ph'), email: modalVal('t-em'), nationalId: modalVal('t-nid'), emergencyContactName: modalVal('t-ecn'), emergencyContactPhone: modalVal('t-ecp'), notes: modalVal('t-notes'), ...(pw ? {password: pw} : {}) };
+  try {
+    if (window._tenantEdit) await api('/tenants/' + window._tenantEdit.id, { method: 'PATCH', body });
+    else await api('/tenants', { method: 'POST', body });
+    closeModal(); toast('Tenant saved!'); loadTenants();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── LEASES ────────────────────────────────────────────────────────────
+async function loadLeases() {
+  try {
+    const items = await api('/leases');
+    const pc = $('page-content');
+    pc.innerHTML = `
+      <div class="ph">
+        <div><div class="ph-title">Leases</div><div class="ph-sub">${items.length} leases</div></div>
+        <button class="btn btn-primary" onclick="openLeaseModal()">＋ New Lease</button>
+      </div>
+      <div class="tbl"><table>
+        <thead><tr><th>Tenant</th><th>Property / Unit</th><th>Rent</th><th>Account Reference</th><th>Start Date</th><th>Status</th><th></th></tr></thead>
+        <tbody>${items.length === 0 ? `<tr><td colspan="7"><div class="empty"><div class="empty-ic">📋</div><div class="empty-title">No leases yet</div><p>Create a lease to assign a tenant to a unit</p></div></td></tr>` :
+        items.map(l=>`<tr>
+          <td class="fw6">${esc(l.tenant?.firstName)} ${esc(l.tenant?.lastName)}</td>
+          <td>${esc(l.unit?.property?.name)}<br/><span class="muted sm">${esc(l.unit?.unitNumber)}</span></td>
+          <td class="fw6">${fmt(Number(l.monthlyRent))}</td>
+          <td><span class="badge bb mono" style="font-size:11px">${esc(l.accountReference)}</span></td>
+          <td class="muted">${fdate(l.startDate)}</td>
+          <td>${badge(l.status)}</td>
+          <td>${l.status==='ACTIVE'?`<button class="btn btn-danger btn-sm" onclick="terminateLease('${l.id}')">Terminate</button>`:'—'}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+  } catch(e) { $('page-content').innerHTML = `<div class="alert alert-err">${esc(e.message)}</div>`; }
+}
+
+async function openLeaseModal() {
+  try {
+    const [tenants, units] = await Promise.all([api('/tenants'), api('/units/available')]);
+    openModal('Create New Lease',
+      `<div class="alert alert-info">💡 Account reference (M-Pesa account number) is auto-generated from property and unit codes.</div>
+      <div class="fg"><label>Tenant*</label><select id="l-ten">
+        <option value="">Select tenant</option>
+        ${tenants.map(t=>`<option value="${t.id}">${esc(t.firstName)} ${esc(t.lastName)} — ${esc(t.phone)}</option>`).join('')}
+      </select></div>
+      <div class="fg"><label>Unit*</label><select id="l-unit">
+        <option value="">Select vacant unit</option>
+        ${units.map(u=>`<option value="${u.id}">${esc(u.property?.name)} — ${esc(u.unitNumber)} (KES ${Number(u.rentAmount).toLocaleString()})</option>`).join('')}
+      </select></div>
+      <div class="g2">
+        <div class="fg"><label>Monthly Rent (KES)*</label><input id="l-rent" type="number" placeholder="25000"/></div>
+        <div class="fg"><label>Deposit (KES)</label><input id="l-dep" type="number" value="0"/></div>
+      </div>
+      <div class="g2">
+        <div class="fg"><label>Start Date*</label><input id="l-start" type="date" value="${new Date().toISOString().slice(0,10)}"/></div>
+        <div class="fg"><label>Payment Due Day (1–28)</label><input id="l-due" type="number" min="1" max="28" value="1"/></div>
+      </div>
+      <div class="fg"><label>Notes</label><textarea id="l-notes" rows="2"></textarea></div>`,
+      `<button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+       <button class="btn btn-primary" onclick="saveLease()">Create Lease</button>`);
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function saveLease() {
+  const body = { tenantId: modalVal('l-ten'), unitId: modalVal('l-unit'), monthlyRent: parseFloat(modalVal('l-rent')), depositAmount: parseFloat(modalVal('l-dep')||'0'), startDate: modalVal('l-start'), paymentDueDay: parseInt(modalVal('l-due')||'1'), notes: modalVal('l-notes') };
+  try {
+    await api('/leases', { method: 'POST', body });
+    closeModal(); toast('Lease created!'); loadLeases();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function terminateLease(id) {
+  if (!confirm('Terminate this lease? The unit will be marked as vacant.')) return;
+  try {
+    await api('/leases/' + id + '/terminate', { method: 'POST', body: { reason: 'Terminated by landlord' } });
+    toast('Lease terminated'); loadLeases();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── PAYMENTS ──────────────────────────────────────────────────────────
+let payTab = 'all';
+async function loadPayments() {
+  try {
+    const [items, unmatched] = await Promise.all([api('/payments'), api('/payments/unmatched')]);
+    window._payItems = items;
+    window._payUnmatched = unmatched;
+    renderPayments();
+  } catch(e) { $('page-content').innerHTML = `<div class="alert alert-err">${esc(e.message)}</div>`; }
+}
+
+function renderPayments() {
+  const items = window._payItems || [];
+  const unmatched = window._payUnmatched || [];
+  const pc = $('page-content');
+  pc.innerHTML = `
+    <div class="ph">
+      <div><div class="ph-title">Payments</div><div class="ph-sub">${items.length} payments</div></div>
+      <button class="btn btn-primary" onclick="openPaymentModal()">＋ Record Payment</button>
+    </div>
+    <div class="tabs">
+      <div class="tab${payTab==='all'?' on':''}" onclick="setPayTab('all')">All Payments (${items.length})</div>
+      <div class="tab${payTab==='unmatched'?' on':''}" onclick="setPayTab('unmatched')">Unmatched ${unmatched.length>0?`<span class="badge br" style="margin-left:6px">${unmatched.length}</span>`:''}</div>
+    </div>
+    <div id="pay-body"></div>`;
+  renderPayBody();
+}
+
+function setPayTab(tab) { payTab = tab; renderPayments(); }
+
+function renderPayBody() {
+  const el = $('pay-body');
+  if (!el) return;
+  if (payTab === 'all') {
+    const items = window._payItems || [];
+    el.innerHTML = `<div class="tbl"><table>
+      <thead><tr><th>Date</th><th>Tenant</th><th>Amount</th><th>Reference</th><th>Account</th><th>Provider</th><th>Status</th><th></th></tr></thead>
+      <tbody>${items.length===0?`<tr><td colspan="8"><div class="empty"><div class="empty-ic">💳</div><div class="empty-title">No payments yet</div></div></td></tr>`:
+      items.map(p=>`<tr>
+        <td class="muted sm">${fdate(p.paidAt)}</td>
+        <td class="fw6">${esc(p.tenant?.firstName)} ${esc(p.tenant?.lastName)}</td>
+        <td style="color:var(--green);font-weight:700">${fmt(Number(p.amount))}</td>
+        <td><span class="mono sm">${esc(p.mpesaReference||'Manual')}</span></td>
+        <td><span class="badge bb mono" style="font-size:10px">${esc(p.accountNumber||p.lease?.accountReference||'—')}</span></td>
+        <td>${badge(p.provider)}</td>
+        <td>${p.isReversed?'<span class="badge br">REVERSED</span>':badge(p.matchStatus)}</td>
+        <td>${!p.isReversed?`<button class="btn btn-ghost btn-sm" onclick="reversePayment('${p.id}')">Reverse</button>`:'—'}</td>
+      </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  } else {
+    const unmatched = window._payUnmatched || [];
+    el.innerHTML = unmatched.length===0 ? `<div class="empty"><div class="empty-ic">✅</div><div class="empty-title">No unmatched payments</div><p>All payments have been matched to tenants</p></div>` :
+    `<div class="alert alert-warn">⚠ These payments arrived via M-Pesa but could not be matched automatically. Resolve each one by linking to the correct lease.</div>
+    <div class="tbl"><table>
+      <thead><tr><th>Received</th><th>Reference</th><th>Account Typed</th><th>Amount</th><th>Phone</th><th></th></tr></thead>
+      <tbody>${unmatched.map(u=>`<tr>
+        <td class="muted sm">${fdate(u.receivedAt)}</td>
+        <td><span class="mono sm">${esc(u.rawReference)}</span></td>
+        <td><span class="badge by mono" style="font-size:10px">${esc(u.accountNumber||'—')}</span></td>
+        <td style="color:var(--amber);font-weight:700">${fmt(Number(u.amount))}</td>
+        <td>${esc(u.phoneFrom||'—')}</td>
+        <td><button class="btn btn-primary btn-sm" onclick="resolveUnmatched('${u.id}','${Number(u.amount)}')">Resolve</button></td>
+      </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  }
+}
+
+async function openPaymentModal() {
+  try {
+    const leases = await api('/leases');
+    const active = leases.filter(l => l.status === 'ACTIVE');
+    openModal('Record Payment',
+      `<div class="alert alert-info">💡 Payment will be allocated to outstanding charges (oldest first).</div>
+      <div class="fg"><label>Lease / Tenant*</label><select id="pm-lease">
+        <option value="">Select active lease</option>
+        ${active.map(l=>`<option value="${l.id}">${esc(l.tenant?.firstName)} ${esc(l.tenant?.lastName)} — ${esc(l.accountReference)}</option>`).join('')}
+      </select></div>
+      <div class="g2">
+        <div class="fg"><label>Amount (KES)*</label><input id="pm-amt" type="number" placeholder="25000"/></div>
+        <div class="fg"><label>Payment Date*</label><input id="pm-date" type="date" value="${new Date().toISOString().slice(0,10)}"/></div>
+      </div>
+      <div class="g2">
+        <div class="fg"><label>Provider</label><select id="pm-prov">
+          ${['MPESA','BANK_TRANSFER','CASH','CHEQUE'].map(p=>`<option>${p}</option>`).join('')}
+        </select></div>
+        <div class="fg"><label>Reference / M-Pesa Code</label><input id="pm-ref" placeholder="QDK7XXXXXX"/></div>
+      </div>
+      <div class="fg"><label>Notes</label><input id="pm-notes" placeholder="Optional"/></div>`,
+      `<button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+       <button class="btn btn-success" onclick="savePayment()">Record Payment</button>`);
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function savePayment() {
+  const body = { leaseId: modalVal('pm-lease'), amount: parseFloat(modalVal('pm-amt')), paidAt: modalVal('pm-date'), provider: modalVal('pm-prov'), mpesaReference: modalVal('pm-ref'), notes: modalVal('pm-notes') };
+  try {
+    await api('/payments', { method: 'POST', body });
+    closeModal(); toast('Payment recorded and allocated!'); loadPayments();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function reversePayment(id) {
+  const reason = prompt('Reason for reversal (required):');
+  if (!reason) return;
+  try {
+    await api('/payments/' + id + '/reverse', { method: 'POST', body: { reason } });
+    toast('Payment reversed'); loadPayments();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function resolveUnmatched(id, amount) {
+  try {
+    const leases = await api('/leases');
+    const active = leases.filter(l => l.status === 'ACTIVE');
+    openModal('Resolve Unmatched Payment — KES ' + parseFloat(amount).toLocaleString(),
+      `<div class="alert alert-info">Match this payment to the correct tenant lease. It will be allocated automatically.</div>
+      <div class="fg"><label>Match to Lease*</label><select id="ru-lease">
+        <option value="">Select lease</option>
+        ${active.map(l=>`<option value="${l.id}">${esc(l.tenant?.firstName)} ${esc(l.tenant?.lastName)} — ${esc(l.accountReference)}</option>`).join('')}
+      </select></div>
+      <div class="fg"><label>Note</label><input id="ru-note" placeholder="Why was this unmatched?"/></div>`,
+      `<button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+       <button class="btn btn-primary" onclick="doResolve('${id}')">Resolve & Allocate</button>`);
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function doResolve(id) {
+  const body = { leaseId: modalVal('ru-lease'), note: modalVal('ru-note') };
+  try {
+    await api('/payments/unmatched/' + id + '/resolve', { method: 'POST', body });
+    closeModal(); toast('Payment resolved and allocated!'); loadPayments();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── BILLING ───────────────────────────────────────────────────────────
+async function loadBilling() {
+  try {
+    const charges = await api('/billing/charges');
+    window._charges = charges;
+    window._billingFilter = '';
+    renderBilling(charges);
+  } catch(e) { $('page-content').innerHTML = `<div class="alert alert-err">${esc(e.message)}</div>`; }
+}
+
+function renderBilling(charges) {
+  const filter = window._billingFilter || '';
+  const filtered = filter ? charges.filter(c => c.status === filter) : charges;
+  const pc = $('page-content');
+  pc.innerHTML = `
+    <div class="ph">
+      <div><div class="ph-title">Billing & Charges</div><div class="ph-sub">${charges.length} total charges</div></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select style="width:auto" onchange="filterBilling(this.value)">
+          <option value="">All statuses</option>
+          ${['UNPAID','PARTIAL','PAID','OVERDUE','WAIVED'].map(s=>`<option${filter===s?' selected':''}>${s}</option>`).join('')}
+        </select>
+        <button class="btn btn-outline" onclick="generateCharges()">⚡ Generate This Month</button>
+      </div>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>Tenant</th><th>Unit</th><th>Period</th><th>Due Date</th><th>Amount Due</th><th>Paid</th><th>Balance</th><th>Late Fees</th><th>Status</th></tr></thead>
+      <tbody>${filtered.length===0?`<tr><td colspan="9"><div class="empty"><div class="empty-ic">🧾</div><div class="empty-title">No charges</div></div></td></tr>`:
+      filtered.map(c=>{
+        const lf = (c.lateFees||[]).filter(f=>!f.isWaived).reduce((s,f)=>s+Number(f.amount),0);
+        return `<tr>
+          <td class="fw6">${esc(c.tenant?.firstName)} ${esc(c.tenant?.lastName)}</td>
+          <td class="muted">${esc(c.lease?.unit?.unitNumber)}</td>
+          <td class="muted">${fmon(c.billingPeriod)}</td>
+          <td class="muted">${fdate(c.dueDate)}</td>
+          <td class="fw6">${fmt(Number(c.amountDue))}</td>
+          <td style="color:var(--green)">${fmt(Number(c.amountPaid))}</td>
+          <td style="font-weight:700;color:${Number(c.balance)>0?'var(--red)':'var(--green)'}">${fmt(Number(c.balance))}</td>
+          <td>${lf>0?`<span style="color:var(--red);font-weight:600">${fmt(lf)}</span>`:'—'}</td>
+          <td>${badge(c.status)}</td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+function filterBilling(val) { window._billingFilter = val; renderBilling(window._charges||[]); }
+
+async function generateCharges() {
+  try {
+    const r = await api('/billing/generate', { method: 'POST', body: {} });
+    toast('Generated ' + r.generated + ' charges'); loadBilling();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── RECEIPTS ──────────────────────────────────────────────────────────
+async function loadReceipts() {
+  try {
+    const items = await api('/receipts');
+    const pc = $('page-content');
+    pc.innerHTML = `
+      <div class="ph"><div><div class="ph-title">Receipts</div><div class="ph-sub">${items.length} receipts issued</div></div></div>
+      <div class="tbl"><table>
+        <thead><tr><th>Receipt No.</th><th>Tenant</th><th>Amount Paid</th><th>Balance After</th><th>Issued</th></tr></thead>
+        <tbody>${items.length===0?`<tr><td colspan="5"><div class="empty"><div class="empty-ic">📄</div><div class="empty-title">No receipts yet</div><p>Receipts are generated automatically after payment</p></div></td></tr>`:
+        items.map(r=>`<tr>
+          <td><span class="badge bb mono">${esc(r.receiptNumber)}</span></td>
+          <td class="fw6">${esc(r.tenant?.firstName)} ${esc(r.tenant?.lastName)}</td>
+          <td style="color:var(--green);font-weight:600">${fmt(Number(r.amountPaid))}</td>
+          <td style="font-weight:600;color:${Number(r.balanceAfter)>0?'var(--red)':'var(--green)'}">${fmt(Number(r.balanceAfter))}</td>
+          <td class="muted">${fdate(r.issuedAt)}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+  } catch(e) { $('page-content').innerHTML = `<div class="alert alert-err">${esc(e.message)}</div>`; }
+}
+
+// ── REPORTS ───────────────────────────────────────────────────────────
+let repTab = 'collection';
+async function loadReports() {
+  try {
+    const [col, arr, perf] = await Promise.all([api('/reports/collection'), api('/reports/arrears'), api('/reports/property-performance')]);
+    window._repData = { col, arr, perf };
+    renderReports();
+  } catch(e) { $('page-content').innerHTML = `<div class="alert alert-err">${esc(e.message)}</div>`; }
+}
+
+function renderReports() {
+  const d = window._repData;
+  if (!d) return;
+  const {col, arr, perf} = d;
+  const pc = $('page-content');
+  pc.innerHTML = `
+    <div class="ph"><div class="ph-title">Reports</div></div>
+    <div class="tabs">
+      <div class="tab${repTab==='collection'?' on':''}" onclick="setRepTab('collection')">Collection Summary</div>
+      <div class="tab${repTab==='arrears'?' on':''}" onclick="setRepTab('arrears')">Arrears Report</div>
+      <div class="tab${repTab==='performance'?' on':''}" onclick="setRepTab('performance')">Property Performance</div>
+    </div>
+    <div id="rep-body"></div>`;
+  renderRepBody();
+}
+
+function setRepTab(t) { repTab = t; renderReports(); }
+
+function renderRepBody() {
+  const d = window._repData;
+  const el = $('rep-body');
+  if (!el || !d) return;
+  const {col, arr, perf} = d;
+  if (repTab === 'collection') {
+    el.innerHTML = `
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">Expected</div><div class="kpi-value" style="font-size:20px">${fmt(col.totalExpected)}</div></div>
+        <div class="kpi"><div class="kpi-label">Collected</div><div class="kpi-value" style="font-size:20px;color:var(--green)">${fmt(col.totalCollected)}</div></div>
+        <div class="kpi"><div class="kpi-label">Outstanding</div><div class="kpi-value" style="font-size:20px;color:var(--red)">${fmt(col.totalOutstanding)}</div></div>
+        <div class="kpi"><div class="kpi-label">Collection Rate</div><div class="kpi-value" style="color:${col.collectionRate>=80?'var(--green)':'var(--amber)'}">${col.collectionRate}%</div><div class="pbar"><div class="pfill" style="width:${col.collectionRate}%;background:${col.collectionRate>=80?'var(--green)':'var(--amber)'}"></div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Breakdown by Status</div>
+        ${(col.byStatus||[]).map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9">
+          ${badge(s.status)}<span class="fw6">${s._count} charges · ${fmt(Number(s._sum?.amountDue||0))}</span>
+        </div>`).join('')}
+      </div>`;
+  } else if (repTab === 'arrears') {
+    el.innerHTML = arr.length===0 ? `<div class="empty"><div class="empty-ic">✅</div><div class="empty-title">No arrears</div><p>All tenants are up to date</p></div>` :
+    `<div class="tbl"><table>
+      <thead><tr><th>Tenant</th><th>Phone</th><th>Property</th><th>Unit</th><th>Period</th><th>Balance</th><th>Late Fees</th><th>Days Overdue</th></tr></thead>
+      <tbody>${arr.map(a=>`<tr>
+        <td class="fw6">${esc(a.tenant)}</td>
+        <td>${esc(a.tenantPhone)}</td>
+        <td>${esc(a.property)}</td>
+        <td>${esc(a.unit)}</td>
+        <td class="muted">${fmon(a.billingPeriod)}</td>
+        <td style="color:var(--red);font-weight:600">${fmt(a.balance)}</td>
+        <td>${a.lateFees>0?`<span style="color:var(--red)">${fmt(a.lateFees)}</span>`:'—'}</td>
+        <td><span class="badge ${a.daysOverdue>30?'br':a.daysOverdue>7?'by':'bgr'}">${a.daysOverdue}d</span></td>
+      </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  } else {
+    el.innerHTML = `<div class="tbl"><table>
+      <thead><tr><th>Property</th><th>County</th><th>Units</th><th>Occupied</th><th>Occupancy</th><th>Expected</th><th>Collected</th><th>Collection</th></tr></thead>
+      <tbody>${perf.map(p=>`<tr>
+        <td class="fw6">${esc(p.property)}</td>
+        <td>${esc(p.county)}</td>
+        <td>${p.totalUnits}</td>
+        <td>${p.occupiedUnits}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="pbar" style="width:70px;display:inline-block"><div class="pfill" style="width:${p.occupancyRate}%;background:${p.occupancyRate>=80?'var(--green)':'var(--amber)'}"></div></div>${p.occupancyRate}%</div></td>
+        <td>${fmt(p.expectedRent)}</td>
+        <td style="color:var(--green)">${fmt(p.collectedRent)}</td>
+        <td><span class="badge ${p.collectionRate>=80?'bg':p.collectionRate>=50?'by':'br'}">${p.collectionRate}%</span></td>
+      </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  }
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────────────────────
+async function loadNotifications() {
+  try {
+    const items = await api('/notifications');
+    const typeColor = {PAYMENT_REMINDER_PRE:'bb',PAYMENT_REMINDER_OVERDUE:'br',PAYMENT_CONFIRMED:'bg',RECEIPT_ISSUED:'bg',PAYMENT_REMINDER_DUE:'by'};
+    $('page-content').innerHTML = `
+      <div class="ph"><div><div class="ph-title">Notifications</div><div class="ph-sub">Reminder and confirmation log</div></div></div>
+      <div class="tbl"><table>
+        <thead><tr><th>Tenant</th><th>Type</th><th>Channel</th><th>Recipient</th><th>Status</th><th>Sent</th></tr></thead>
+        <tbody>${items.length===0?`<tr><td colspan="6"><div class="empty"><div class="empty-ic">🔔</div><div class="empty-title">No notifications yet</div><p>Notifications are sent automatically by the system</p></div></td></tr>`:
+        items.map(n=>`<tr>
+          <td class="fw6">${esc(n.tenant?.firstName)} ${esc(n.tenant?.lastName)}</td>
+          <td><span class="badge ${typeColor[n.type]||'bgr'}" style="font-size:10px">${esc((n.type||'').replace(/_/g,' '))}</span></td>
+          <td>${badge(n.channel)}</td>
+          <td class="mono sm">${esc(n.recipient)}</td>
+          <td>${badge(n.status)}</td>
+          <td class="muted sm">${fdate(n.sentAt||n.createdAt)}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+  } catch(e) { $('page-content').innerHTML = `<div class="alert alert-err">${esc(e.message)}</div>`; }
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────────
+function loadSettings() {
+  const u = state.user;
+  $('page-content').innerHTML = `
+    <div class="ph"><div class="ph-title">Settings</div></div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Profile</div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+          <div class="avatar" style="width:52px;height:52px;font-size:20px">${(u.firstName||'U')[0]}</div>
+          <div><div class="fw7" style="font-size:15px">${esc(u.firstName)} ${esc(u.lastName)}</div><div class="muted">${esc(u.email)}</div><div style="margin-top:4px">${badge(u.role)}</div></div>
+        </div>
+        ${u.landlord?`<div style="background:#f8fafc;border-radius:8px;padding:12px">
+          <div class="fw6" style="margin-bottom:8px">Business Details</div>
+          <div class="sm" style="margin-bottom:4px"><b>Business:</b> ${esc(u.landlord.businessName||'—')}</div>
+          <div class="sm" style="margin-bottom:4px"><b>Account Prefix:</b> <span class="mono fw6">${esc(u.landlord.accountPrefix||'—')}</span></div>
+          ${u.landlord.paybillNumber?`<div class="sm"><b>Paybill No:</b> ${esc(u.landlord.paybillNumber)}</div>`:''}
+        </div>`:''}
+      </div>
+      <div class="card">
+        <div class="card-title">Change Password</div>
+        <div class="fg"><label>Current Password</label><input id="s-cp" type="password"/></div>
+        <div class="fg"><label>New Password</label><input id="s-np" type="password"/></div>
+        <div class="fg"><label>Confirm New Password</label><input id="s-cnp" type="password"/></div>
+        <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+      </div>
+      <div class="card">
+        <div class="card-title">M-Pesa Webhook URLs</div>
+        <div class="alert alert-info">Configure these in Safaricom Business Manager under your Paybill settings.</div>
+        <div class="fg"><label>Validation URL</label><input readonly value="${API.replace('/api/v1','')}/api/v1/webhooks/mpesa/validation" style="background:#f8fafc;font-family:monospace;font-size:11px" onclick="this.select()"/></div>
+        <div class="fg"><label>Confirmation URL</label><input readonly value="${API.replace('/api/v1','')}/api/v1/webhooks/mpesa/confirmation" style="background:#f8fafc;font-family:monospace;font-size:11px" onclick="this.select()"/></div>
+        <div class="alert alert-warn">⚠ Your server must be publicly accessible via HTTPS for M-Pesa to reach these URLs.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">System Info</div>
+        ${[['Version','1.0.0'],['Backend','NestJS + PostgreSQL'],['Auth','JWT (7 day tokens)'],['Billing Cron','1st of every month'],['Late Fee Cron','Daily at 8:00 AM'],['Reminders Cron','Daily at 7:00 AM']].map(([k,v])=>`
+        <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f1f5f9">
+          <span class="muted">${k}</span><span class="fw6">${v}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+async function changePassword() {
+  const cp = $('s-cp').value, np = $('s-np').value, cnp = $('s-cnp').value;
+  if (np !== cnp) { toast('Passwords do not match', 'err'); return; }
+  if (np.length < 8) { toast('Password must be at least 8 characters', 'err'); return; }
+  try {
+    await api('/auth/change-password', { method: 'POST', body: { currentPassword: cp, newPassword: np } });
+    toast('Password changed successfully!');
+    $('s-cp').value = ''; $('s-np').value = ''; $('s-cnp').value = '';
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────
+(async () => {
+  const token = localStorage.getItem('rf_token');
+  if (token) {
+    try {
+      const u = await api('/auth/me');
+      state.user = u;
+    } catch(e) {
+      localStorage.removeItem('rf_token');
+    }
+  }
+  render();
+})();
+</script>
+</body>
+</html>

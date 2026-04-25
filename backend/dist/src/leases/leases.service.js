@@ -1,0 +1,73 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.LeasesService = void 0;
+const common_1 = require("@nestjs/common");
+const prisma_service_1 = require("../prisma/prisma.service");
+const { Decimal } = require('@prisma/client/runtime/library');
+let LeasesService = class LeasesService {
+    constructor(prisma) {
+        this.prisma = prisma;
+    }
+    async findAll(landlordId) {
+        return this.prisma.lease.findMany({ where: { landlordId }, include: { tenant: true, unit: { include: { property: true } }, _count: { select: { rentCharges: true, payments: true } } }, orderBy: { createdAt: 'desc' } });
+    }
+    async findOne(id, landlordId) {
+        const l = await this.prisma.lease.findFirst({ where: { id, landlordId }, include: { tenant: true, unit: { include: { property: true } }, rentCharges: { orderBy: { billingPeriod: 'desc' }, take: 12 }, payments: { orderBy: { paidAt: 'desc' }, take: 20 } } });
+        if (!l)
+            throw new common_1.NotFoundException('Lease not found');
+        return l;
+    }
+    async create(landlordId, dto) {
+        const [tenant, unit] = await Promise.all([
+            this.prisma.tenant.findFirst({ where: { id: dto.tenantId, landlordId } }),
+            this.prisma.unit.findFirst({ where: { id: dto.unitId, property: { landlordId } } }),
+        ]);
+        if (!tenant)
+            throw new common_1.NotFoundException('Tenant not found');
+        if (!unit)
+            throw new common_1.NotFoundException('Unit not found');
+        if (await this.prisma.lease.findFirst({ where: { unitId: dto.unitId, status: 'ACTIVE' } }))
+            throw new common_1.BadRequestException('Unit already has an active lease');
+        const property = await this.prisma.property.findUnique({ where: { id: unit.propertyId } });
+        const landlord = await this.prisma.landlord.findUnique({ where: { id: landlordId } });
+        const accountReference = landlord.accountPrefix + '-' + property.code + '-' + unit.unitNumber;
+        return this.prisma.$transaction(async (tx) => {
+            const lease = await tx.lease.create({ data: { landlordId, tenantId: dto.tenantId, unitId: dto.unitId, accountReference, monthlyRent: new Decimal(dto.monthlyRent), depositAmount: new Decimal(dto.depositAmount || 0), depositPaid: dto.depositPaid || false, paymentDueDay: dto.paymentDueDay || 1, startDate: new Date(dto.startDate), endDate: dto.endDate ? new Date(dto.endDate) : null, status: 'ACTIVE', notes: dto.notes }, include: { tenant: true, unit: { include: { property: true } } } });
+            await tx.unit.update({ where: { id: dto.unitId }, data: { status: 'OCCUPIED' } });
+            const now = new Date();
+            const billingPeriod = new Date(now.getFullYear(), now.getMonth(), 1);
+            const dueDate = new Date(now.getFullYear(), now.getMonth(), dto.paymentDueDay || 1);
+            await tx.rentCharge.create({ data: { leaseId: lease.id, tenantId: dto.tenantId, landlordId, amountDue: new Decimal(dto.monthlyRent), amountPaid: new Decimal(0), balance: new Decimal(dto.monthlyRent), billingPeriod, dueDate, status: 'UNPAID' } });
+            return lease;
+        });
+    }
+    async terminate(id, landlordId, reason) {
+        const lease = await this.findOne(id, landlordId);
+        if (lease.status !== 'ACTIVE')
+            throw new common_1.BadRequestException('Lease is not active');
+        return this.prisma.$transaction(async (tx) => {
+            await tx.lease.update({ where: { id }, data: { status: 'TERMINATED', terminatedAt: new Date(), terminationReason: reason } });
+            await tx.unit.update({ where: { id: lease.unitId }, data: { status: 'VACANT' } });
+            return { message: 'Lease terminated' };
+        });
+    }
+    async update(id, landlordId, dto) {
+        await this.findOne(id, landlordId);
+        return this.prisma.lease.update({ where: { id }, data: dto });
+    }
+};
+exports.LeasesService = LeasesService;
+exports.LeasesService = LeasesService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+], LeasesService);
+//# sourceMappingURL=leases.service.js.map

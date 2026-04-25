@@ -1,0 +1,422 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  LANDLORD
+  MANAGER
+  TENANT
+}
+
+enum PropertyType {
+  APARTMENT_BLOCK
+  MAISONETTE
+  BUNGALOW
+  COMMERCIAL
+  BEDSITTER
+  MIXED_USE
+}
+
+enum UnitStatus {
+  VACANT
+  OCCUPIED
+  UNDER_MAINTENANCE
+  RESERVED
+}
+
+enum LeaseStatus {
+  ACTIVE
+  TERMINATED
+  EXPIRED
+  PENDING
+}
+
+enum ChargeStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  WAIVED
+  OVERDUE
+}
+
+enum PaymentProvider {
+  MPESA
+  BANK_TRANSFER
+  CASH
+  CHEQUE
+  OTHER
+}
+
+enum PaymentMatchStatus {
+  MATCHED
+  UNMATCHED
+  MANUALLY_RESOLVED
+}
+
+enum LateFeeType {
+  FIXED
+  PERCENTAGE
+}
+
+enum NotificationType {
+  PAYMENT_REMINDER_PRE
+  PAYMENT_REMINDER_DUE
+  PAYMENT_REMINDER_OVERDUE
+  PAYMENT_CONFIRMED
+  RECEIPT_ISSUED
+  LEASE_EXPIRY_WARNING
+  GENERAL
+}
+
+enum NotificationChannel {
+  SMS
+  EMAIL
+  WHATSAPP
+  IN_APP
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+}
+
+enum UnmatchedResolutionStatus {
+  PENDING
+  RESOLVED
+  REFUNDED
+  IGNORED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  PAYMENT_RECORD
+  PAYMENT_REVERSE
+  PAYMENT_RESOLVE
+  RECEIPT_GENERATE
+  LEASE_TERMINATE
+  FEE_WAIVE
+}
+
+model Landlord {
+  id                String   @id @default(uuid())
+  name              String
+  businessName      String?  @map("business_name")
+  email             String   @unique
+  phone             String
+  paybillNumber     String?  @map("paybill_number")
+  accountPrefix     String   @unique @map("account_prefix")
+  branding          Json?
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  users             User[]
+  properties        Property[]
+  tenants           Tenant[]
+  leases            Lease[]
+  payments          Payment[]
+  unmatchedPayments UnmatchedPayment[]
+  receipts          Receipt[]
+  notifications     Notification[]
+  lateFeeRules      LateFeeRule[]
+  auditLogs         AuditLog[]
+
+  @@map("landlords")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  phone        String?
+  passwordHash String    @map("password_hash")
+  firstName    String    @map("first_name")
+  lastName     String    @map("last_name")
+  role         UserRole  @default(TENANT)
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  landlordId   String?   @map("landlord_id")
+  landlord     Landlord? @relation(fields: [landlordId], references: [id])
+  tenant       Tenant?
+  auditLogs    AuditLog[]
+  resolvedPayments UnmatchedPayment[] @relation("ResolvedBy")
+
+  @@map("users")
+}
+
+model Property {
+  id           String       @id @default(uuid())
+  landlordId   String       @map("landlord_id")
+  landlord     Landlord     @relation(fields: [landlordId], references: [id])
+  name         String
+  code         String       @map("code")
+  address      String
+  county       String
+  propertyType PropertyType @default(APARTMENT_BLOCK) @map("property_type")
+  description  String?
+  isActive     Boolean      @default(true) @map("is_active")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+  units        Unit[]
+
+  @@unique([landlordId, code])
+  @@map("properties")
+}
+
+model Unit {
+  id          String     @id @default(uuid())
+  propertyId  String     @map("property_id")
+  property    Property   @relation(fields: [propertyId], references: [id])
+  unitNumber  String     @map("unit_number")
+  floor       String?
+  description String?
+  rentAmount  Decimal    @map("rent_amount") @db.Decimal(12, 2)
+  status      UnitStatus @default(VACANT)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  leases      Lease[]
+
+  @@unique([propertyId, unitNumber])
+  @@map("units")
+}
+
+model Tenant {
+  id                    String   @id @default(uuid())
+  landlordId            String   @map("landlord_id")
+  landlord              Landlord @relation(fields: [landlordId], references: [id])
+  userId                String?  @unique @map("user_id")
+  user                  User?    @relation(fields: [userId], references: [id])
+  firstName             String   @map("first_name")
+  lastName              String   @map("last_name")
+  phone                 String
+  email                 String?
+  nationalId            String?  @map("national_id")
+  emergencyContactName  String?  @map("emergency_contact_name")
+  emergencyContactPhone String?  @map("emergency_contact_phone")
+  notes                 String?
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  leases        Lease[]
+  payments      Payment[]
+  rentCharges   RentCharge[]
+  receipts      Receipt[]
+  notifications Notification[]
+
+  @@map("tenants")
+}
+
+model Lease {
+  id               String      @id @default(uuid())
+  landlordId       String      @map("landlord_id")
+  landlord         Landlord    @relation(fields: [landlordId], references: [id])
+  tenantId         String      @map("tenant_id")
+  tenant           Tenant      @relation(fields: [tenantId], references: [id])
+  unitId           String      @map("unit_id")
+  unit             Unit        @relation(fields: [unitId], references: [id])
+  accountReference String      @unique @map("account_reference")
+  monthlyRent      Decimal     @map("monthly_rent") @db.Decimal(12, 2)
+  depositAmount    Decimal     @default(0) @map("deposit_amount") @db.Decimal(12, 2)
+  depositPaid      Boolean     @default(false) @map("deposit_paid")
+  paymentDueDay    Int         @default(1) @map("payment_due_day")
+  startDate        DateTime    @map("start_date") @db.Date
+  endDate          DateTime?   @map("end_date") @db.Date
+  status           LeaseStatus @default(ACTIVE)
+  terminatedAt     DateTime?   @map("terminated_at")
+  terminationReason String?    @map("termination_reason")
+  notes            String?
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  rentCharges RentCharge[]
+  payments    Payment[]
+
+  @@map("leases")
+}
+
+model RentCharge {
+  id            String       @id @default(uuid())
+  leaseId       String       @map("lease_id")
+  lease         Lease        @relation(fields: [leaseId], references: [id])
+  tenantId      String       @map("tenant_id")
+  tenant        Tenant       @relation(fields: [tenantId], references: [id])
+  landlordId    String       @map("landlord_id")
+  amountDue     Decimal      @map("amount_due") @db.Decimal(12, 2)
+  amountPaid    Decimal      @default(0) @map("amount_paid") @db.Decimal(12, 2)
+  balance       Decimal      @map("balance") @db.Decimal(12, 2)
+  billingPeriod DateTime     @map("billing_period") @db.Date
+  dueDate       DateTime     @map("due_date") @db.Date
+  status        ChargeStatus @default(UNPAID)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  allocations PaymentAllocation[]
+  lateFees    LateFeeCharge[]
+
+  @@unique([leaseId, billingPeriod])
+  @@map("rent_charges")
+}
+
+model Payment {
+  id             String             @id @default(uuid())
+  landlordId     String             @map("landlord_id")
+  tenantId       String             @map("tenant_id")
+  tenant         Tenant             @relation(fields: [tenantId], references: [id])
+  leaseId        String             @map("lease_id")
+  lease          Lease              @relation(fields: [leaseId], references: [id])
+  amount         Decimal            @db.Decimal(12, 2)
+  mpesaReference String?            @unique @map("mpesa_reference")
+  accountNumber  String?            @map("account_number")
+  phoneFrom      String?            @map("phone_from")
+  provider       PaymentProvider    @default(MPESA)
+  matchStatus    PaymentMatchStatus @default(MATCHED) @map("match_status")
+  recordedById   String?            @map("recorded_by_id")
+  notes          String?
+  isReversed     Boolean            @default(false) @map("is_reversed")
+  reversedAt     DateTime?          @map("reversed_at")
+  reversalReason String?            @map("reversal_reason")
+  paidAt         DateTime           @map("paid_at")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  allocations PaymentAllocation[]
+  receipt     Receipt?
+
+  @@map("payments")
+}
+
+model PaymentAllocation {
+  id            String     @id @default(uuid())
+  paymentId     String     @map("payment_id")
+  payment       Payment    @relation(fields: [paymentId], references: [id])
+  rentChargeId  String     @map("rent_charge_id")
+  rentCharge    RentCharge @relation(fields: [rentChargeId], references: [id])
+  amountApplied Decimal    @map("amount_applied") @db.Decimal(12, 2)
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  @@map("payment_allocations")
+}
+
+model LateFeeRule {
+  id              String      @id @default(uuid())
+  landlordId      String      @map("landlord_id")
+  landlord        Landlord    @relation(fields: [landlordId], references: [id])
+  name            String
+  gracePeriodDays Int         @default(5) @map("grace_period_days")
+  feeType         LateFeeType @default(FIXED) @map("fee_type")
+  feeValue        Decimal     @map("fee_value") @db.Decimal(8, 2)
+  isRecurring     Boolean     @default(false) @map("is_recurring")
+  isActive        Boolean     @default(true) @map("is_active")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  charges LateFeeCharge[]
+
+  @@map("late_fee_rules")
+}
+
+model LateFeeCharge {
+  id           String      @id @default(uuid())
+  rentChargeId String      @map("rent_charge_id")
+  rentCharge   RentCharge  @relation(fields: [rentChargeId], references: [id])
+  ruleId       String      @map("rule_id")
+  rule         LateFeeRule @relation(fields: [ruleId], references: [id])
+  amount       Decimal     @db.Decimal(12, 2)
+  appliedDate  DateTime    @map("applied_date") @db.Date
+  isWaived     Boolean     @default(false) @map("is_waived")
+  waivedBy     String?     @map("waived_by")
+  waivedAt     DateTime?   @map("waived_at")
+  waivedReason String?     @map("waived_reason")
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  @@map("late_fee_charges")
+}
+
+model Receipt {
+  id            String   @id @default(uuid())
+  landlordId    String   @map("landlord_id")
+  landlord      Landlord @relation(fields: [landlordId], references: [id])
+  paymentId     String   @unique @map("payment_id")
+  payment       Payment  @relation(fields: [paymentId], references: [id])
+  tenantId      String   @map("tenant_id")
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  receiptNumber String   @unique @map("receipt_number")
+  pdfUrl        String?  @map("pdf_url")
+  amountPaid    Decimal  @map("amount_paid") @db.Decimal(12, 2)
+  balanceAfter  Decimal  @map("balance_after") @db.Decimal(12, 2)
+  issuedAt      DateTime @default(now()) @map("issued_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("receipts")
+}
+
+model Notification {
+  id         String              @id @default(uuid())
+  landlordId String              @map("landlord_id")
+  landlord   Landlord            @relation(fields: [landlordId], references: [id])
+  tenantId   String              @map("tenant_id")
+  tenant     Tenant              @relation(fields: [tenantId], references: [id])
+  type       NotificationType
+  channel    NotificationChannel
+  recipient  String
+  subject    String?
+  message    String
+  status     NotificationStatus  @default(PENDING)
+  sentAt     DateTime?           @map("sent_at")
+  errorMsg   String?             @map("error_msg")
+  createdAt  DateTime            @default(now()) @map("created_at")
+
+  @@map("notifications")
+}
+
+model UnmatchedPayment {
+  id               String                    @id @default(uuid())
+  landlordId       String                    @map("landlord_id")
+  landlord         Landlord                  @relation(fields: [landlordId], references: [id])
+  rawReference     String                    @map("raw_reference")
+  accountNumber    String?                   @map("account_number")
+  amount           Decimal                   @db.Decimal(12, 2)
+  phoneFrom        String?                   @map("phone_from")
+  provider         PaymentProvider           @default(MPESA)
+  rawPayload       Json                      @map("raw_payload")
+  resolutionStatus UnmatchedResolutionStatus @default(PENDING) @map("resolution_status")
+  resolvedById     String?                   @map("resolved_by_id")
+  resolvedBy       User?                     @relation("ResolvedBy", fields: [resolvedById], references: [id])
+  resolutionNote   String?                   @map("resolution_note")
+  resolvedAt       DateTime?                 @map("resolved_at")
+  receivedAt       DateTime                  @default(now()) @map("received_at")
+
+  @@map("unmatched_payments")
+}
+
+model AuditLog {
+  id          String      @id @default(uuid())
+  userId      String?     @map("user_id")
+  user        User?       @relation(fields: [userId], references: [id])
+  landlordId  String?     @map("landlord_id")
+  landlord    Landlord?   @relation(fields: [landlordId], references: [id])
+  action      AuditAction
+  entityType  String      @map("entity_type")
+  entityId    String      @map("entity_id")
+  beforeState Json?       @map("before_state")
+  afterState  Json?       @map("after_state")
+  ipAddress   String?     @map("ip_address")
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@index([entityType, entityId])
+  @@index([landlordId, createdAt])
+  @@map("audit_logs")
+}
